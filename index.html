@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synexa - Business Suite</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --sidebar-width: 240px;
+            --navbar-height: 56px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Layout Components */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1000;
+            -webkit-app-region: drag;
+        }
+
+        .navbar * {
+            -webkit-app-region: no-drag;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: var(--navbar-height);
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--dark);
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--navbar-height);
+            height: calc(100vh - var(--navbar-height));
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* Window Controls */
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            margin-right: 16px;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .window-control:hover {
+            transform: scale(1.1);
+        }
+
+        .window-control.close { background: #ff5f57; }
+        .window-control.minimize { background: #ffbd2e; }
+        .window-control.maximize { background: #28ca42; }
+
+        /* Sidebar */
+        .sidebar-nav {
+            padding: 16px 0;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin: 0 8px 4px 8px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-item i {
+            width: 20px;
+            margin-right: 12px;
+            text-align: center;
+        }
+
+        .sidebar-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Form Elements */
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Table */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .table tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .space-x-2 > * + * { margin-left: 8px; }
+        .space-x-4 > * + * { margin-left: 16px; }
+        .space-y-4 > * + * { margin-top: 16px; }
+        .text-sm { font-size: 14px; }
+        .text-lg { font-size: 18px; }
+        .text-xl { font-size: 20px; }
+        .text-2xl { font-size: 24px; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-800 { color: #1f2937; }
+        .text-blue-600 { color: #2563eb; }
+        .text-green-600 { color: #059669; }
+        .text-red-600 { color: #dc2626; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-6 { margin-bottom: 24px; }
+        .mt-4 { margin-top: 16px; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .gap-4 { gap: 16px; }
+        .gap-6 { gap: 24px; }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="window-controls">
+            <button id="close-btn" class="window-control close"></button>
+            <button id="minimize-btn" class="window-control minimize"></button>
+            <button id="maximize-btn" class="window-control maximize"></button>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">Synexa</h1>
+            </div>
+        </div>
+        
+        <div style="margin-left: auto;" class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                <span class="text-sm text-gray-600">Online</span>
+            </div>
+            <button class="btn btn-primary">
+                <i class="fas fa-user mr-2"></i>
+                Admin
+            </button>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-item active" data-section="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-item" data-section="quotes">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Offerte</span>
+                    <span class="sidebar-badge" id="quotes-badge">0</span>
+                </a>
+                <a href="#" class="sidebar-item" data-section="clients">
+                    <i class="fas fa-users"></i>
+                    <span>Clienti</span>
+                    <span class="sidebar-badge" id="clients-badge">0</span>
+                </a>
+                <a href="#" class="sidebar-item" data-section="products">
+                    <i class="fas fa-box"></i>
+                    <span>Prodotti</span>
+                    <span class="sidebar-badge" id="products-badge">0</span>
+                </a>
+                <a href="#" class="sidebar-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="sidebar-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Impostazioni</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Dashboard</h2>
+                    <p class="text-gray-600">Panoramica del tuo business</p>
+                </div>
+
+                <!-- Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="metric-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Offerte Totali</h3>
+                            <i class="fas fa-file-invoice text-blue-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800" id="total-quotes">0</div>
+                        <div class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> +12% questo mese
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Fatturato</h3>
+                            <i class="fas fa-euro-sign text-green-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800" id="total-revenue">€0</div>
+                        <div class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> +8.2% questo mese
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Clienti</h3>
+                            <i class="fas fa-users text-blue-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800" id="active-clients">0</div>
+                        <div class="text-sm text-blue-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> +5 nuovi
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-600">Conversione</h3>
+                            <i class="fas fa-percentage text-green-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800" id="conversion-rate">0%</div>
+                        <div class="text-sm text-green-600 mt-1">
+                            <i class="fas fa-arrow-up"></i> +2.1% questo mese
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Fatturato Mensile</h3>
+                        <canvas id="revenue-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Prodotti Top</h3>
+                        <canvas id="products-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quotes Section -->
+            <section id="quotes" class="section hidden">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Gestione Offerte</h2>
+                            <p class="text-gray-600">Crea e gestisci le tue offerte commerciali</p>
+                        </div>
+                        <button id="new-quote-btn" class="btn btn-primary">
+                            <i class="fas fa-plus mr-2"></i>Nuova Offerta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quote Form -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold mb-4">Informazioni Offerta</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                            <input id="client-name" type="text" class="form-input" placeholder="Nome Cliente">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Numero Offerta</label>
+                            <input id="quote-number" type="text" class="form-input" placeholder="OFF-001">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                            <input id="quote-date" type="date" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Valuta</label>
+                            <select id="currency" class="form-input">
+                                <option value="EUR">EUR (€)</option>
+                                <option value="USD">USD ($)</option>
+                                <option value="GBP">GBP (£)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Product Form -->
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 24px;">
+                        <h4 class="text-lg font-semibold mb-4">Aggiungi Prodotto/Servizio</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                            <div class="relative">
+                                <input id="product-code" type="text" class="form-input" placeholder="Codice">
+                                <div id="suggestions" class="hidden absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto"></div>
+                            </div>
+                            <input id="product-description" type="text" class="form-input" placeholder="Descrizione">
+                            <input id="product-price" type="number" step="0.01" class="form-input" placeholder="Prezzo">
+                            <input id="product-quantity" type="number" step="0.01" class="form-input" placeholder="Quantità">
+                            <div class="flex items-center">
+                                <label class="flex items-center space-x-2">
+                                    <input id="is-service" type="checkbox">
+                                    <span class="text-sm">Servizio</span>
+                                </label>
+                            </div>
+                            <button id="add-product-btn" class="btn btn-primary w-full">
+                                <i class="fas fa-plus mr-2"></i>Aggiungi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Prodotti nell'Offerta</h3>
+                        <span id="items-count" class="status-badge success">0 elementi</span>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Codice</th>
+                                    <th>Descrizione</th>
+                                    <th>Tipo</th>
+                                    <th style="text-align: right;">Prezzo Unit.</th>
+                                    <th style="text-align: right;">Quantità</th>
+                                    <th style="text-align: right;">Totale</th>
+                                    <th style="text-align: center;">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                                        <i class="fas fa-inbox text-4xl mb-4 block" style="opacity: 0.3;"></i>
+                                        <p>Nessun prodotto aggiunto ancora</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4">Totali</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Subtotale:</span>
+                                <span id="subtotal" class="font-semibold">€0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Sconto:</span>
+                                <span id="total-discount" class="font-semibold text-red-600">-€0.00</span>
+                            </div>
+                            <div class="flex justify-between" style="border-top: 2px solid #e5e7eb; padding-top: 16px;">
+                                <span class="text-xl font-bold">TOTALE:</span>
+                                <span id="final-total" class="text-xl font-bold text-green-600">€0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4">Statistiche</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div style="text-align: center; padding: 16px; background: #dbeafe; border-radius: 8px;">
+                                <div id="total-items" class="text-2xl font-bold text-blue-600">0</div>
+                                <div class="text-sm text-gray-600">Articoli</div>
+                            </div>
+                            <div style="text-align: center; padding: 16px; background: #dcfce7; border-radius: 8px;">
+                                <div id="total-quantity" class="text-2xl font-bold text-green-600">0</div>
+                                <div class="text-sm text-gray-600">Quantità</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <button id="save-quote-btn" class="btn btn-success">
+                            <i class="fas fa-save mr-2"></i>Salva Offerta
+                        </button>
+                        <button id="export-pdf-btn" class="btn btn-danger">
+                            <i class="fas fa-file-pdf mr-2"></i>Esporta PDF
+                        </button>
+                        <button id="load-quote-btn" class="btn btn-primary">
+                            <i class="fas fa-folder-open mr-2"></i>Carica Offerta
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients Section -->
+            <section id="clients" class="section hidden">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Gestione Clienti</h2>
+                            <p class="text-gray-600">Database completo dei tuoi clienti</p>
+                        </div>
+                        <button id="new-client-btn" class="btn btn-primary">
+                            <i class="fas fa-user-plus mr-2"></i>Nuovo Cliente
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clients Table -->
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Email</th>
+                                <th>Telefono</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #6b7280;">
+                                    <i class="fas fa-users text-4xl mb-4 block" style="opacity: 0.3;"></i>
+                                    <p>Nessun cliente ancora</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products" class="section hidden">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Database Prodotti</h2>
+                            <p class="text-gray-600">Gestisci il tuo catalogo prodotti</p>
+                        </div>
+                        <button id="new-product-btn" class="btn btn-primary">
+                            <i class="fas fa-plus mr-2"></i>Nuovo Prodotto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Codice</th>
+                                <th>Descrizione</th>
+                                <th>Tipo</th>
+                                <th style="text-align: right;">Prezzo</th>
+                                <th style="text-align: center;">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-database-table">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #6b7280;">
+                                    <i class="fas fa-box text-4xl mb-4 block" style="opacity: 0.3;"></i>
+                                    <p>Nessun prodotto nel database</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Analytics</h2>
+                    <p class="text-gray-600">Analisi dettagliate delle performance</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Trend Vendite</h3>
+                        <canvas id="sales-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="text-lg font-semibold mb-4">Clienti per Categoria</h3>
+                        <canvas id="clients-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Impostazioni</h2>
+                    <p class="text-gray-600">Configura l'applicazione</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4">Impostazioni Generali</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Valuta Predefinita</label>
+                                <select id="default-currency" class="form-input">
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Lingua</label>
+                                <select id="language" class="form-input">
+                                    <option value="it">Italiano</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="text-lg font-semibold mb-4">Dati Azienda</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nome Azienda</label>
+                                <input id="company-name" type="text" class="form-input" placeholder="La Tua Azienda">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">P.IVA</label>
+                                <input id="company-vat" type="text" class="form-input" placeholder="12345678901">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button id="save-settings-btn" class="btn btn-success">
+                        <i class="fas fa-save mr-2"></i>Salva Impostazioni
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Client Modal -->
+    <div id="client-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Gestione Cliente</h3>
+                <button id="close-client-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="client-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome Cliente *</label>
+                    <input id="client-form-name" type="text" class="form-input" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input id="client-form-email" type="email" class="form-input">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                    <input id="client-form-phone" type="text" class="form-input">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="client-form-status" class="form-input">
+                        <option value="new">Nuovo</option>
+                        <option value="standard">Standard</option>
+                        <option value="vip">VIP</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" id="cancel-client" class="btn" style="background: #6b7280; color: white;">
+                        Annulla
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Salva Cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Gestione Prodotto</h3>
+                <button id="close-product-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="product-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Codice Prodotto *</label>
+                    <input id="product-form-code" type="text" class="form-input" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descrizione *</label>
+                    <input id="product-form-description" type="text" class="form-input" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prezzo Unitario *</label>
+                    <input id="product-form-price" type="number" step="0.01" class="form-input" required>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input id="product-form-service" type="checkbox">
+                    <label class="text-sm">È un servizio (ore)</label>
+                </div>
+                
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button type="button" id="cancel-product" class="btn" style="background: #6b7280; color: white;">
+                        Annulla
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Salva Prodotto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quotes List Modal -->
+    <div id="quotes-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 800px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Offerte Salvate</h3>
+                <button id="close-quotes-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="quotes-list" class="space-y-4">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+            <span id="notification-text">Operazione completata!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="renderer.js"></script>
+</body>
+</html>

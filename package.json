@@ -1,0 +1,282 @@
+{
+  "name": "synexa",
+  "version": "2.0.0",
+  "description": "Sistema Desktop Avanzato Synexa per Gestione Offerte Commerciali con Analytics e AI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "dev-win": "set NODE_ENV=development && electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --windows",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "dist": "electron-builder --publish=never",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "clean": "rimraf dist build",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "keywords": [
+    "offerte",
+    "preventivi", 
+    "commerciale",
+    "analytics",
+    "clienti",
+    "gestione",
+    "business",
+    "ai",
+    "electron",
+    "desktop"
+  ],
+  "author": {
+    "name": "Il Tuo Nome",
+    "email": "tua-email@esempio.com",
+    "url": "https://tuo-sito.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/tuo-username/gestione-offerte-pro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuo-username/gestione-offerte-pro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tuo-username/gestione-offerte-pro/issues"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.1",
+    "axios": "^1.6.7",
+    "chart.js": "^4.4.1",
+    "papaparse": "^5.4.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1",
+    "uuid": "^9.0.1"
+  },
+  "build": {
+    "appId": "com.synexa.business-suite",
+    "productName": "Synexa",
+    "copyright": "Copyright © 2025 ${author}",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/*.d.ts",
+      "!node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
+      "!**/node_modules/*/{README.md,readme.md,LICENSE,license}",
+      "!src/",
+      "!docs/",
+      "!.eslintrc*",
+      "!jest.config.*"
+    ],
+    "extraResources": [
+      {
+        "from": "templates/",
+        "to": "templates/",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "Il Tuo Nome",
+      "verifyUpdateCodeSignature": false,
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Gestione Offerte Pro",
+      "runAfterFinish": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "menuCategory": "Business",
+      "include": "installer.nsh"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.exe"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Installa ${productName}",
+      "icon": "assets/icon.icns",
+      "background": "assets/dmg-background.png",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Office",
+      "packageCategory": "office",
+      "synopsis": "Sistema avanzato per gestione offerte commerciali",
+      "description": "Applicazione desktop professionale per la gestione completa di offerte, clienti, prodotti con analytics avanzate e intelligenza artificiale integrata.",
+      "desktop": {
+        "Name": "Gestione Offerte Pro",
+        "Comment": "Sistema gestione offerte commerciali",
+        "Keywords": "business;commerce;quotes;clients;analytics;"
+      }
+    },
+    "deb": {
+      "priority": "optional",
+      "depends": [
+        "libnss3",
+        "libatk-bridge2.0-0",
+        "libdrm2",
+        "libxkbcommon0",
+        "libxcomposite1",
+        "libxdamage1",
+        "libxrandr2",
+        "libgbm1",
+        "libxss1",
+        "libasound2"
+      ]
+    },
+    "rpm": {
+      "fpm": [
+        "--rpm-os", "linux",
+        "--rpm-summary", "Sistema gestione offerte commerciali avanzato"
+      ]
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${arch}.AppImage"
+    },
+    "compression": "maximum",
+    "removePackageScripts": true,
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "tuo-username",
+        "repo": "gestione-offerte-pro"
+      }
+    ]
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin", 
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64",
+    "ia32"
+  ],
+  "browserslist": [
+    "last 2 Chrome versions"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.js",
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "collectCoverageFrom": [
+      "renderer.js",
+      "main.js",
+      "preload.js"
+    ]
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "browser": true,
+      "es2021": true
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2021,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": "warn",
+      "no-console": "off",
+      "prefer-const": "error",
+      "no-var": "error"
+    }
+  }
+}
